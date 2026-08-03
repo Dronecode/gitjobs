@@ -34,8 +34,18 @@ export class DashboardSearch extends LitWrapper {
     isLoading: { type: Boolean },
   };
 
-  /** @type {string} Default foundation when none selected */
-  defaultFoundation = "cncf";
+  /**
+   * Default foundation when none is selected.
+   *
+   * Derived from the foundations this deployment actually has rather than
+   * hardcoded. The component supports multiple foundations, but a literal
+   * default silently breaks any deployment that is not the one it names: every
+   * search is issued against a foundation with no members and returns empty.
+   * @type {string}
+   */
+  get defaultFoundation() {
+    return this.foundations?.[0]?.name ?? "";
+  }
 
   constructor() {
     super();
@@ -56,6 +66,24 @@ export class DashboardSearch extends LitWrapper {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("mousedown", this._handleClickOutside);
+  }
+
+  /**
+   * Keep the selected foundation valid for this deployment.
+   *
+   * The constructor runs before the `foundations` attribute is applied, so the
+   * initial selection is made with an empty list. Once the real list arrives,
+   * adopt the first entry unless the current selection is genuinely in it.
+   * @param {Map} changedProperties
+   */
+  willUpdate(changedProperties) {
+    if (!changedProperties.has("foundations") || !this.foundations?.length) {
+      return;
+    }
+    const isValid = this.foundations.some((f) => f.name === this.selectedFoundation);
+    if (!isValid) {
+      this.selectedFoundation = this.foundations[0].name;
+    }
   }
 
   disconnectedCallback() {
