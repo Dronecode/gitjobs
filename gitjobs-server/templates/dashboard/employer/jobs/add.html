@@ -193,7 +193,13 @@
         {# End Job qualifications -#}
 
         {# Certifications -#}
-        <dashboard-search type="certifications" certifications="{{ certifications|json }}" class="col-span-full"></dashboard-search>
+        {# Hidden when none are available. Dronecode has no certification -#}
+        {# programme, so this would otherwise be an empty picker on every job -#}
+        {# form. Driven by the data rather than removed, so it comes back on -#}
+        {# its own if certifications are ever added. -#}
+        {% if !certifications.is_empty() -%}
+          <dashboard-search type="certifications" certifications="{{ certifications|json }}" class="col-span-full"></dashboard-search>
+        {%- endif %}
         {# End certifications -#}
 
         {# Job skills -#}

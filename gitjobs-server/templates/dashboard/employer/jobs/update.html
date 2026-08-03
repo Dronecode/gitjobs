@@ -216,7 +216,10 @@
         {# End Job qualifications -#}
 
         {# Certifications -#}
-        <dashboard-search type="certifications" certifications="{{ certifications|json }}" {%- if let Some(job_certifications) = job.certifications %} selected="{{ job_certifications|json }}"{%- endif %} class="col-span-full"></dashboard-search>
+        {# Hidden when none are available. See the matching block in add.html. -#}
+        {% if !certifications.is_empty() -%}
+          <dashboard-search type="certifications" certifications="{{ certifications|json }}" {%- if let Some(job_certifications) = job.certifications %} selected="{{ job_certifications|json }}"{%- endif %} class="col-span-full"></dashboard-search>
+        {%- endif %}
         {# End certifications -#}
 
         {# Job skills -#}
