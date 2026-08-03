@@ -1,0 +1,10 @@
+{
+  "slug": "cncf-original",
+  "name": "CNCF Original (upstream)",
+  "strategy": "Upstream gitjobs orange, kept for reference and easy rollback.",
+  "colors": {
+    "50": "#fff4ed", "100": "#ffe6d4", "200": "#ffcaa9", "300": "#ffa472",
+    "400": "#fe6728", "500": "#fd4d12", "600": "#ee3308", "700": "#c52309",
+    "800": "#9c1d10", "900": "#7e1b10", "950": "#440906"
+  }
+}

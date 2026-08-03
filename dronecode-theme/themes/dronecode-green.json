@@ -1,0 +1,18 @@
+{
+  "slug": "dronecode-green",
+  "name": "Dronecode Green",
+  "strategy": "The logo green's own hue (OKLCH 158) held across the whole ramp, with lightness solved so every step that the codebase actually paints clears its contrast requirement.",
+  "colors": {
+    "50": "#f3fdf7",
+    "100": "#defae8",
+    "200": "#73eeac",
+    "300": "#3da671",
+    "400": "#269260",
+    "500": "#1c8354",
+    "600": "#1b7148",
+    "700": "#1a5e3d",
+    "800": "#184c32",
+    "900": "#15402a",
+    "950": "#0f2a1b"
+  }
+}

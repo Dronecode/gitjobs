@@ -1,0 +1,18 @@
+{
+  "slug": "telemetry-teal",
+  "name": "Telemetry Teal",
+  "strategy": "Built on the brand teal's hue (OKLCH 200), reading as instrumentation rather than foliage, and maximally distant from CNCF orange.",
+  "colors": {
+    "50": "#f3fdfd",
+    "100": "#dbf9fa",
+    "200": "#73e7ee",
+    "300": "#3ea1a7",
+    "400": "#268e94",
+    "500": "#1d7f83",
+    "600": "#1b6e72",
+    "700": "#1a5a5e",
+    "800": "#184a4d",
+    "900": "#153d40",
+    "950": "#0f2729"
+  }
+}

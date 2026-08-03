@@ -11,17 +11,18 @@
     "Clarity City", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
     Arial, sans-serif, Roboto, Ubuntu, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol";
-  --color-primary-50: #fff4ed;
-  --color-primary-100: #ffe6d4;
-  --color-primary-200: #ffcaa9;
-  --color-primary-300: #ffa472;
-  --color-primary-400: #fe6728;
-  --color-primary-500: #fd4d12;
-  --color-primary-600: #ee3308;
-  --color-primary-700: #c52309;
-  --color-primary-800: #9c1d10;
-  --color-primary-900: #7e1b10;
-  --color-primary-950: #440906;
+  /* Dronecode theme: Dronecode Green */
+  --color-primary-50: #f3fdf7;
+  --color-primary-100: #defae8;
+  --color-primary-200: #73eeac;
+  --color-primary-300: #3da671;
+  --color-primary-400: #269260;
+  --color-primary-500: #1c8354;
+  --color-primary-600: #1b7148;
+  --color-primary-700: #1a5e3d;
+  --color-primary-800: #184c32;
+  --color-primary-900: #15402a;
+  --color-primary-950: #0f2a1b;
 }
 
 @layer components {

@@ -1,0 +1,18 @@
+{
+  "slug": "horizon",
+  "name": "Horizon",
+  "strategy": "A deliberate traverse from teal tints to green mid-tones and back toward teal in the darks, so both brand colours appear in one scale. The most distinctive and the least conventional.",
+  "colors": {
+    "50": "#f3fdfd",
+    "100": "#d7faf6",
+    "200": "#73ebcd",
+    "300": "#3da580",
+    "400": "#269264",
+    "500": "#1c8354",
+    "600": "#1b714c",
+    "700": "#1a5d46",
+    "800": "#184b40",
+    "900": "#153d3a",
+    "950": "#0f2729"
+  }
+}

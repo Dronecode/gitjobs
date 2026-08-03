@@ -1,0 +1,18 @@
+{
+  "slug": "deep-forest",
+  "name": "Deep Forest",
+  "strategy": "The green hue cooled gradually toward the teal in the dark steps, so the darks carry a hint of the second brand colour instead of going flat black-green.",
+  "colors": {
+    "50": "#f3fdf7",
+    "100": "#ddf9e9",
+    "200": "#7aecb8",
+    "300": "#45a47f",
+    "400": "#2f9170",
+    "500": "#268166",
+    "600": "#226f5a",
+    "700": "#1f5c4c",
+    "800": "#1c4c40",
+    "900": "#183e36",
+    "950": "#112924"
+  }
+}
