@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "PushGitjobsImages",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:CompleteLayerUpload",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ],
+      "Resource": [
+        "arn:aws:ecr:us-west-2:810743298831:repository/gitjobs/server",
+        "arn:aws:ecr:us-west-2:810743298831:repository/gitjobs/syncer",
+        "arn:aws:ecr:us-west-2:810743298831:repository/gitjobs/dbmigrator"
+      ]
+    }
+  ]
+}

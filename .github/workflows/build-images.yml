@@ -1,95 +1,92 @@
 name: Build images
 
+# Builds from `dronecode`, not `main`. This fork's customisations live on
+# `dronecode` and that is what gets deployed; `main` tracks upstream. Deploying
+# from a non-default branch also means a stray push, or a fork sync through the
+# GitHub UI, cannot ship anything on its own.
 on:
   push:
     branches:
-      - main
+      - dronecode
+
+# Required for the OIDC token used to assume the ECR push role.
+permissions:
+  id-token: write
+  contents: read
 
 env:
-  OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
-  OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
-  OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
-  OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
-  OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+  AWS_REGION: us-west-2
+  ECR_REGISTRY: 810743298831.dkr.ecr.us-west-2.amazonaws.com
 
 jobs:
   build-dbmigrator-image:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dronecode'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      - name: Login to OCI Registry
-        id: login-ocir
-        uses: oracle-actions/login-ocir@v1.3.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
-      - name: Get gitjobs-dbmigrator OCIR repository
-        id: get-ocir-repository-dbmigrator
-        uses: oracle-actions/get-ocir-repository@v1.3.0
-        with:
-          name: gitjobs/dbmigrator
-          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+          role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Build and push gitjobs-dbmigrator image
         env:
-          OCIR_REPOSITORY: ${{ steps.get-ocir-repository-dbmigrator.outputs.repo_path }}
+          # Tagged by commit SHA only, as upstream does. Immutable tags mean a
+          # task definition pins an exact build, and rollback is repointing at
+          # an older SHA rather than rebuilding.
+          ECR_REPOSITORY: ${{ env.ECR_REGISTRY }}/gitjobs/dbmigrator
         run: |
           docker build \
             -f database/migrations/Dockerfile \
-            -t $OCIR_REPOSITORY:$GITHUB_SHA \
+            -t $ECR_REPOSITORY:$GITHUB_SHA \
             .
-          docker push $OCIR_REPOSITORY:$GITHUB_SHA
+          docker push $ECR_REPOSITORY:$GITHUB_SHA
 
   build-server-image:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dronecode'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      - name: Login to OCI Registry
-        id: login-ocir
-        uses: oracle-actions/login-ocir@v1.3.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
-      - name: Get gitjobs-server OCIR repository
-        id: get-ocir-repository-server
-        uses: oracle-actions/get-ocir-repository@v1.3.0
-        with:
-          name: gitjobs/server
-          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+          role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Build and push gitjobs-server image
         env:
-          OCIR_REPOSITORY: ${{ steps.get-ocir-repository-server.outputs.repo_path }}
+          ECR_REPOSITORY: ${{ env.ECR_REGISTRY }}/gitjobs/server
         run: |
           docker build \
             -f gitjobs-server/Dockerfile \
-            -t $OCIR_REPOSITORY:$GITHUB_SHA \
+            -t $ECR_REPOSITORY:$GITHUB_SHA \
             .
-          docker push $OCIR_REPOSITORY:$GITHUB_SHA
+          docker push $ECR_REPOSITORY:$GITHUB_SHA
 
   build-syncer-image:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dronecode'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      - name: Login to OCI Registry
-        id: login-ocir
-        uses: oracle-actions/login-ocir@v1.3.0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
-      - name: Get gitjobs-syncer OCIR repository
-        id: get-ocir-repository-syncer
-        uses: oracle-actions/get-ocir-repository@v1.3.0
-        with:
-          name: gitjobs/syncer
-          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+          role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Build and push gitjobs-syncer image
         env:
-          OCIR_REPOSITORY: ${{ steps.get-ocir-repository-syncer.outputs.repo_path }}
+          ECR_REPOSITORY: ${{ env.ECR_REGISTRY }}/gitjobs/syncer
         run: |
           docker build \
             -f gitjobs-syncer/Dockerfile \
-            -t $OCIR_REPOSITORY:$GITHUB_SHA \
+            -t $ECR_REPOSITORY:$GITHUB_SHA \
             .
-          docker push $OCIR_REPOSITORY:$GITHUB_SHA
+          docker push $ECR_REPOSITORY:$GITHUB_SHA
