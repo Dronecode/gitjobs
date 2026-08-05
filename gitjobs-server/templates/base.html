@@ -9,34 +9,31 @@
 
     {#- OG tags #}
     <meta property="og:type" content="website">
-    <meta property="og:title" content="GitJobs">
-    <meta property="og:url" content="https://gitjobs.dev/">
+    <meta property="og:title" content="Dronecode Job Board">
+    <meta property="og:url" content="https://jobs.dronecode.org/">
     <meta property="og:description"
-          content="GitJobs is an open source job board focused on open source job opportunities.">
-    <meta property="og:image"
-          content="https://gitjobs.dev/static/images/index/gitjobs.png">
+          content="Open source drone and robotics roles from Dronecode member companies, working on PX4, Pixhawk, MAVLink, MAVSDK and QGroundControl.">
+    <meta property="og:image" content="https://jobs.dronecode.org/static/images/social.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     {#- End OG tags  #}
 
     {#- Twitter tags #}
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="twitter:domain" content="gitjobs.dev">
-    <meta property="twitter:url" content="https://gitjobs.dev">
-    <meta name="twitter:title" content="GitJobs">
+    <meta property="twitter:domain" content="jobs.dronecode.org">
+    <meta property="twitter:url" content="https://jobs.dronecode.org/">
+    <meta name="twitter:title" content="Dronecode Job Board">
     <meta name="twitter:description"
-          content="GitJobs is an open source job board focused on open source job opportunities.">
-    <meta name="twitter:image"
-          content="https://gitjobs.dev/static/images/index/gitjobs.png">
+          content="Open source drone and robotics roles from Dronecode member companies, working on PX4, Pixhawk, MAVLink, MAVSDK and QGroundControl.">
+    <meta name="twitter:image" content="https://jobs.dronecode.org/static/images/social.png">
     {#- End Twitter tags #}
 
-    <link rel="icon"
-          href="https://gitjobs.dev/static/images/index/favicon.ico"
-          sizes="any">
-    <link rel="icon"
-          href="https://gitjobs.dev/static/images/index/favicon.svg"
-          sizes="any"
-          type="image/svg+xml">
-    <link rel="apple-touch-icon"
-          href="https://gitjobs.dev/static/images/index/apple-touch-icon.png">
+    {#- Icons are served from this site. Upstream points these at absolute
+        gitjobs.dev URLs, which makes every page load fetch an icon from
+        someone else's server and breaks if they move it. -#}
+    <link rel="icon" href="/static/images/favicon.ico" sizes="any">
+    <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f9fafb" />
