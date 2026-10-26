@@ -21,7 +21,7 @@ use uuid::Uuid;
 use crate::{
     config::EmailConfig,
     db::DynDB,
-    templates::notifications::{EmailVerification, TeamInvitation},
+    templates::notifications::{EmailVerification, JobPendingApproval, TeamInvitation},
 };
 
 /// Number of concurrent workers that deliver notifications.
@@ -188,6 +188,12 @@ impl Worker {
                 let body = template.render()?;
                 (subject, body)
             }
+            NotificationKind::JobPendingApproval => {
+                let subject = "A job is waiting for approval";
+                let template: JobPendingApproval = serde_json::from_value(template_data)?;
+                let body = template.render()?;
+                (subject, body)
+            }
             NotificationKind::TeamInvitation => {
                 let subject = "You have been invited to join a team";
                 let template: TeamInvitation = serde_json::from_value(template_data)?;
@@ -274,6 +280,9 @@ pub(crate) struct NewNotification {
     /// The user IDs to notify.
     pub recipients: Vec<Uuid>,
 
+    /// Email addresses to notify that don't belong to a user.
+    pub emails: Vec<String>,
+
     /// Optional template data for the notification content.
     pub template_data: Option<serde_json::Value>,
 }
@@ -299,6 +308,8 @@ pub(crate) struct Notification {
 pub(crate) enum NotificationKind {
     /// Notification for email verification.
     EmailVerification,
+    /// Notification for a job waiting for moderation.
+    JobPendingApproval,
     /// Notification for a team invitation.
     TeamInvitation,
 }
@@ -331,6 +342,7 @@ mod tests {
             kind: NotificationKind::EmailVerification,
             recipients: expected_recipients.clone(),
 
+            emails: vec![],
             template_data: Some(sample_email_verification_template_data()),
         };
 

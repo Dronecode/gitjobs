@@ -3,7 +3,7 @@
 -- ============================================================================
 
 begin;
-select plan(8);
+select plan(10);
 
 -- ============================================================================
 -- VARIABLES
@@ -171,6 +171,36 @@ select lives_ok(
     )
     $$,
     'Should not fail when recipients list is empty'
+);
+
+-- Should enqueue one notification per email address
+select lives_ok(
+    $$
+    select enqueue_notification(
+        'job-pending-approval',
+        '{"link":"https://example.com/moderator","title":"Engineer"}'::jsonb,
+        '{}'::uuid[],
+        array['moderators@example.com', 'team@example.com']
+    )
+    $$,
+    'Should enqueue one notification per email address'
+);
+
+-- Should create job-pending-approval notifications without a user
+select results_eq(
+    $$
+    select
+        n.email,
+        n.user_id
+    from notification n
+    where n.kind = 'job-pending-approval'
+    order by n.email
+    $$,
+    $$ values
+        ('moderators@example.com'::text, null::uuid),
+        ('team@example.com'::text, null::uuid)
+    $$,
+    'Should create job-pending-approval notifications without a user'
 );
 
 -- ============================================================================

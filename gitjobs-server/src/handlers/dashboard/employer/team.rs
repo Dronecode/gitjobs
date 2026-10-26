@@ -126,6 +126,7 @@ pub(crate) async fn add_member(
             kind: NotificationKind::TeamInvitation,
             recipients: vec![user_id],
 
+            emails: vec![],
             template_data: Some(serde_json::to_value(&template_data)?),
         };
         notifications_manager.enqueue(&notification).await?;

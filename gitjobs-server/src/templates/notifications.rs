@@ -25,6 +25,16 @@ pub(crate) struct TeamInvitation {
     pub link: String,
 }
 
+/// Template for job pending approval notification.
+#[derive(Debug, Clone, Template, Serialize, Deserialize)]
+#[template(path = "notifications/job_pending_approval.html")]
+pub(crate) struct JobPendingApproval {
+    /// Link to the moderator dashboard.
+    pub link: String,
+    /// Title of the job waiting for approval.
+    pub title: String,
+}
+
 // Slack templates.
 
 /// Template for the new job published Slack notification.

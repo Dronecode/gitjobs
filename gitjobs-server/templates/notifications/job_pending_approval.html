@@ -1,0 +1,18 @@
+{% extends "notifications/base.html" -%}
+{% import "macros/email.html" as email -%}
+
+{% block subject -%}
+  A job is waiting for approval
+{% endblock subject -%}
+
+{% block preheader -%}
+  A job is waiting for approval
+{% endblock preheader -%}
+
+{% block content -%}
+  <p class="default mb-30">
+    The job <strong>{{ title }}</strong> has been submitted and is waiting for approval. You can review it from the moderator dashboard.
+  </p>
+
+  {{ email::button(link = link, text = "Moderator dashboard") }}
+{% endblock content -%}

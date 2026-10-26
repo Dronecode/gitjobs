@@ -2,7 +2,8 @@
 create or replace function enqueue_notification(
     p_kind text,
     p_template_data jsonb,
-    p_recipients uuid[]
+    p_recipients uuid[],
+    p_emails text[] default '{}'
 )
 returns void as $$
 declare
@@ -22,5 +23,9 @@ begin
     -- Insert one notification per recipient
     insert into notification (kind, notification_template_data_id, user_id)
     select p_kind, v_notification_template_data_id, unnest(p_recipients);
+
+    -- Insert one notification per email address
+    insert into notification (kind, notification_template_data_id, email)
+    select p_kind, v_notification_template_data_id, unnest(p_emails);
 end;
 $$ language plpgsql;

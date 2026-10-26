@@ -12,17 +12,22 @@ use axum::{
     response::{Html, IntoResponse, Json},
 };
 use chrono::{Duration, Utc};
-use tracing::instrument;
+use tracing::{instrument, warn};
 use uuid::Uuid;
 
 use crate::{
+    config::HttpServerConfig,
     db::DynDB,
     handlers::{
         error::HandlerError,
         extractors::{SelectedEmployerIdRequired, ValidatedFormQs},
         prepare_headers,
     },
-    templates::dashboard::employer::jobs::{self, Job, JobStatus},
+    notifications::{DynNotificationsManager, NewNotification, NotificationKind},
+    templates::{
+        dashboard::employer::jobs::{self, Job, JobStatus},
+        notifications::JobPendingApproval,
+    },
 };
 
 // Pages handlers.
@@ -108,7 +113,9 @@ pub(crate) async fn update_page(
 /// Adds a new job for the selected employer.
 #[instrument(skip_all, err)]
 pub(crate) async fn add(
+    State(cfg): State<HttpServerConfig>,
     State(db): State<DynDB>,
+    State(notifications_manager): State<DynNotificationsManager>,
     SelectedEmployerIdRequired(employer_id): SelectedEmployerIdRequired,
     ValidatedFormQs(mut job): ValidatedFormQs<Job>,
 ) -> Result<impl IntoResponse, HandlerError> {
@@ -122,6 +129,11 @@ pub(crate) async fn add(
 
     // Add job to database
     db.add_job(&employer_id, &job).await?;
+
+    // Notify moderators if the job was submitted for approval
+    if job.status == JobStatus::PendingApproval {
+        notify_moderators(&cfg, &notifications_manager, &job.title).await;
+    }
 
     Ok((StatusCode::CREATED, [("HX-Trigger", "refresh-jobs-table")]).into_response())
 }
@@ -151,10 +163,18 @@ pub(crate) async fn delete(
 /// Publishes a job. It'll be visible to users once it's approved.
 #[instrument(skip_all, err)]
 pub(crate) async fn publish(
+    State(cfg): State<HttpServerConfig>,
     State(db): State<DynDB>,
+    State(notifications_manager): State<DynNotificationsManager>,
     Path(job_id): Path<Uuid>,
 ) -> Result<impl IntoResponse, HandlerError> {
     db.publish_job(&job_id).await?;
+
+    // Notify moderators that the job is waiting for approval
+    if has_moderation_emails(&cfg) {
+        let job = db.get_job_dashboard(&job_id).await?;
+        notify_moderators(&cfg, &notifications_manager, &job.title).await;
+    }
 
     Ok((StatusCode::NO_CONTENT, [("HX-Trigger", "refresh-jobs-table")]))
 }
@@ -177,7 +197,9 @@ pub(crate) async fn stats(
 /// Updates an existing job with new data.
 #[instrument(skip_all, err)]
 pub(crate) async fn update(
+    State(cfg): State<HttpServerConfig>,
     State(db): State<DynDB>,
+    State(notifications_manager): State<DynNotificationsManager>,
     Path(job_id): Path<Uuid>,
     ValidatedFormQs(mut job): ValidatedFormQs<Job>,
 ) -> Result<impl IntoResponse, HandlerError> {
@@ -195,7 +217,58 @@ pub(crate) async fn update(
     // Update job in database
     db.update_job(&job_id, &job).await?;
 
+    // Notify moderators if the job was submitted for approval
+    if job.status == JobStatus::PendingApproval {
+        notify_moderators(&cfg, &notifications_manager, &job.title).await;
+    }
+
     Ok((StatusCode::NO_CONTENT, [("HX-Trigger", "refresh-jobs-table")]).into_response())
+}
+
+// Helpers.
+
+/// Returns whether any moderation notification email addresses are configured.
+fn has_moderation_emails(cfg: &HttpServerConfig) -> bool {
+    cfg.moderation_emails
+        .as_ref()
+        .is_some_and(|emails| !emails.is_empty())
+}
+
+/// Enqueues a notification to the configured moderation email addresses about a job
+/// waiting for approval. Failures are logged, as the job has already been saved.
+async fn notify_moderators(
+    cfg: &HttpServerConfig,
+    notifications_manager: &DynNotificationsManager,
+    title: &str,
+) {
+    if !has_moderation_emails(cfg) {
+        return;
+    }
+
+    let template_data = JobPendingApproval {
+        link: format!(
+            "{}/dashboard/moderator",
+            cfg.base_url.strip_suffix('/').unwrap_or(&cfg.base_url)
+        ),
+        title: title.to_string(),
+    };
+    let template_data = match serde_json::to_value(&template_data) {
+        Ok(template_data) => template_data,
+        Err(err) => {
+            warn!(?err, "error preparing moderation notification");
+            return;
+        }
+    };
+    let notification = NewNotification {
+        kind: NotificationKind::JobPendingApproval,
+        recipients: vec![],
+
+        emails: cfg.moderation_emails.clone().unwrap_or_default(),
+        template_data: Some(template_data),
+    };
+    if let Err(err) = notifications_manager.enqueue(&notification).await {
+        warn!(?err, "error enqueueing moderation notification");
+    }
 }
 
 // Tests.
@@ -219,6 +292,7 @@ mod tests {
         handlers::tests::{
             TestRouterBuilder, sample_auth_user, sample_certifications, sample_employer, sample_employer_job,
             sample_employer_job_summary, sample_foundations, sample_job_stats, sample_session_record,
+            test_http_server_cfg,
         },
         notifications::MockNotificationsManager,
     };
@@ -253,7 +327,9 @@ mod tests {
 
         // Execute handler
         let response = add(
+            State(test_http_server_cfg()),
             State(db),
+            State(Arc::new(MockNotificationsManager::new()) as DynNotificationsManager),
             crate::handlers::extractors::SelectedEmployerIdRequired(Uuid::new_v4()),
             ValidatedFormQs(job),
         )
@@ -323,7 +399,9 @@ mod tests {
 
         // Execute handler
         let response = add(
+            State(test_http_server_cfg()),
             State(db),
+            State(Arc::new(MockNotificationsManager::new()) as DynNotificationsManager),
             crate::handlers::extractors::SelectedEmployerIdRequired(employer_id),
             ValidatedFormQs(job),
         )
@@ -526,7 +604,56 @@ mod tests {
         let db: DynDB = Arc::new(db);
 
         // Execute handler
-        let response = publish(State(db), Path(job_id)).await.unwrap().into_response();
+        let response = publish(
+            State(test_http_server_cfg()),
+            State(db),
+            State(Arc::new(MockNotificationsManager::new()) as DynNotificationsManager),
+            Path(job_id),
+        )
+        .await
+        .unwrap()
+        .into_response();
+
+        // Check response matches expectations
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
+    async fn test_publish_notifies_moderation_emails() {
+        // Setup identifiers and data structures
+        let job_id = Uuid::new_v4();
+        let mut cfg = test_http_server_cfg();
+        cfg.moderation_emails = Some(vec!["moderators@example.test".to_string()]);
+
+        // Setup database mock
+        let mut db = MockDB::new();
+        db.expect_publish_job()
+            .times(1)
+            .withf(move |id| *id == job_id)
+            .returning(|_| Ok(()));
+        db.expect_get_job_dashboard()
+            .times(1)
+            .withf(move |id| *id == job_id)
+            .returning(move |_| Ok(sample_employer_job(job_id)));
+        let db: DynDB = Arc::new(db);
+
+        // Setup notifications manager mock
+        let mut nm = MockNotificationsManager::new();
+        nm.expect_enqueue()
+            .times(1)
+            .withf(|notification| {
+                matches!(notification.kind, NotificationKind::JobPendingApproval)
+                    && notification.recipients.is_empty()
+                    && notification.emails == vec!["moderators@example.test".to_string()]
+            })
+            .returning(|_| Box::pin(async { Ok(()) }));
+        let nm: DynNotificationsManager = Arc::new(nm);
+
+        // Execute handler
+        let response = publish(State(cfg), State(db), State(nm), Path(job_id))
+            .await
+            .unwrap()
+            .into_response();
 
         // Check response matches expectations
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
@@ -593,10 +720,16 @@ mod tests {
         let db: DynDB = Arc::new(db);
 
         // Execute handler
-        let response = update(State(db), Path(job_id), ValidatedFormQs(job))
-            .await
-            .unwrap()
-            .into_response();
+        let response = update(
+            State(test_http_server_cfg()),
+            State(db),
+            State(Arc::new(MockNotificationsManager::new()) as DynNotificationsManager),
+            Path(job_id),
+            ValidatedFormQs(job),
+        )
+        .await
+        .unwrap()
+        .into_response();
 
         // Check response matches expectations
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
@@ -613,10 +746,16 @@ mod tests {
         let db: DynDB = Arc::new(MockDB::new());
 
         // Execute handler
-        let response = update(State(db), Path(job_id), ValidatedFormQs(job))
-            .await
-            .unwrap()
-            .into_response();
+        let response = update(
+            State(test_http_server_cfg()),
+            State(db),
+            State(Arc::new(MockNotificationsManager::new()) as DynNotificationsManager),
+            Path(job_id),
+            ValidatedFormQs(job),
+        )
+        .await
+        .unwrap()
+        .into_response();
 
         // Check response matches expectations
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);

@@ -39,7 +39,7 @@ impl DBNotifications for PgDB {
         trace!("db: enqueue notification");
 
         // Nothing to enqueue
-        if notification.recipients.is_empty() {
+        if notification.recipients.is_empty() && notification.emails.is_empty() {
             trace!("db: skip enqueue notification with empty recipients");
             return Ok(());
         }
@@ -47,11 +47,12 @@ impl DBNotifications for PgDB {
         // Enqueue notification in database
         let db = self.pool.get().await?;
         db.execute(
-            "select enqueue_notification($1::text, $2::jsonb, $3::uuid[]);",
+            "select enqueue_notification($1::text, $2::jsonb, $3::uuid[], $4::text[]);",
             &[
                 &notification.kind.to_string(),
                 &notification.template_data,
                 &notification.recipients,
+                &notification.emails,
             ],
         )
         .await?;

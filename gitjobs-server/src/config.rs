@@ -110,6 +110,8 @@ pub(crate) struct HttpServerConfig {
     pub basic_auth: Option<BasicAuth>,
     /// Optional cookie configuration.
     pub cookie: Option<CookieConfig>,
+    /// Optional email addresses to notify when a job is waiting for moderation.
+    pub moderation_emails: Option<Vec<String>>,
     /// Optional Slack webhook URL to post new jobs published notifications.
     pub slack_webhook_url: Option<String>,
 }

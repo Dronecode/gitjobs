@@ -425,6 +425,7 @@ pub(crate) async fn sign_up(
             kind: NotificationKind::EmailVerification,
             recipients: vec![user.user_id],
 
+            emails: vec![],
             template_data: Some(serde_json::to_value(&template_data)?),
         };
         notifications_manager.enqueue(&notification).await?;

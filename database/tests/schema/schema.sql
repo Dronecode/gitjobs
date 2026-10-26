@@ -253,7 +253,8 @@ select columns_are('notification', array[
     'created_at',
     'error',
     'processed_at',
-    'notification_template_data_id'
+    'notification_template_data_id',
+    'email'
 ]);
 
 -- Test: notification_kind columns should match expected

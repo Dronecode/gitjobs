@@ -508,6 +508,7 @@ pub(crate) fn test_http_server_cfg() -> HttpServerConfig {
         analytics: None,
         basic_auth: None,
         cookie: Some(CookieConfig { secure: Some(false) }),
+        moderation_emails: None,
         slack_webhook_url: None,
     }
 }

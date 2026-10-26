@@ -3,7 +3,7 @@
 -- ============================================================================
 
 begin;
-select plan(4);
+select plan(5);
 
 -- ============================================================================
 -- VARIABLES
@@ -12,6 +12,7 @@ select plan(4);
 \set emailVerificationTemplateDataID '00000000-0000-0000-0000-000000000301'
 \set notification1ID '00000000-0000-0000-0000-000000000201'
 \set notification2ID '00000000-0000-0000-0000-000000000202'
+\set emailNotificationID '00000000-0000-0000-0000-000000000206'
 \set processedNotificationID '00000000-0000-0000-0000-000000000205'
 \set teamInvitationTemplateDataID '00000000-0000-0000-0000-000000000302'
 \set unverifiedEmailVerificationNotificationID '00000000-0000-0000-0000-000000000204'
@@ -150,6 +151,29 @@ select is(
     ),
     0::bigint,
     'Should skip non-email-verification notifications for users without verified email'
+);
+
+-- Should return notifications addressed to an email address without a user
+update notification
+set processed = true
+where notification_id = :'unverifiedEmailVerificationNotificationID'::uuid;
+
+insert into notification (created_at, email, kind, notification_id, notification_template_data_id) values
+    ('2024-01-06 00:00:00+00', 'moderators@example.com', 'job-pending-approval', :'emailNotificationID', :'teamInvitationTemplateDataID');
+
+select is(
+    (
+        select jsonb_build_object(
+            'email', email,
+            'notification_id', notification_id::text
+        )
+        from get_pending_notification()
+    ),
+    jsonb_build_object(
+        'email', 'moderators@example.com',
+        'notification_id', :'emailNotificationID'
+    ),
+    'Should return notifications addressed to an email address without a user'
 );
 
 -- ============================================================================
