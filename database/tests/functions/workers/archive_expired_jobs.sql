@@ -36,7 +36,7 @@ insert into job (
         :'employerID',
         :'expiredJobID',
         'full-time',
-        current_timestamp - interval '40 days',
+        current_timestamp - interval '100 days',
         'published',
         'Expired Job',
         'remote'
@@ -46,7 +46,7 @@ insert into job (
         :'employerID',
         :'freshJobID',
         'full-time',
-        current_timestamp - interval '10 days',
+        current_timestamp - interval '60 days',
         'published',
         'Fresh Job',
         'remote'
@@ -66,7 +66,7 @@ insert into job (
 -- TESTS
 -- ============================================================================
 
--- Should archive published jobs older than 30 days
+-- Should archive published jobs older than 90 days
 select archive_expired_jobs();
 
 select ok(
@@ -77,7 +77,7 @@ select ok(
         from job
         where job_id = :'expiredJobID'::uuid
     ),
-    'Should archive published jobs older than 30 days'
+    'Should archive published jobs older than 90 days'
 );
 
 -- Should keep fresh published and draft jobs unchanged

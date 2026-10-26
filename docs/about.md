@@ -14,9 +14,9 @@ Posting your job listing is free!
 
 ## How long will my job listing be live?
 
-Your job listing will be live for 30 days. After that, it will be automatically archived and removed from the site.
+Your job listing will be live for 90 days. After that, it will be automatically archived and removed from the site.
 
-If your job is still open after that time, you can re-publish it again for another 30 days from the [employer dashboard](https://gitjobs.dev/dashboard/employer?tab=jobs).
+If your job is still open after that time, you can re-publish it again for another 90 days from the [employer dashboard](https://gitjobs.dev/dashboard/employer?tab=jobs).
 
 ## How do I edit a job listing or remove it from the site?
 
