@@ -1,4 +1,8 @@
-import { handleHtmxResponse, initializePreviewButtons } from "/static/js/common/alerts.js";
+import {
+  handleHtmxResponse,
+  initializeConfirmHtmxButtons,
+  initializePreviewButtons,
+} from "/static/js/common/alerts.js";
 import {
   bindHtmxAfterRequestOnce,
   initializeModalCloseHandlers,
@@ -26,15 +30,14 @@ export const initializeModeratorJobs = () => {
     boundAttribute: "approveBound",
   });
 
-  bindHtmxAfterRequestOnce({
+  initializeConfirmHtmxButtons({
     selector: "[data-republish-job-button]",
-    handler: (event) => {
-      handleHtmxResponse({
-        xhr: event.detail.xhr,
-        errorMessage: "Something went wrong republishing this job. Please try again later.",
-      });
-    },
-    boundAttribute: "republishBound",
+    confirmMessage:
+      "Republish this job? It will be live again for another 90 days. Make sure the employer still has this role open, as they won't be notified.",
+    confirmText: "Republish",
+    cancelText: "Cancel",
+    successMessage: "The job has been republished.",
+    errorMessage: "Something went wrong republishing this job. Please try again later.",
   });
 
   const rejectButtons = document.querySelectorAll(".reject-modal");

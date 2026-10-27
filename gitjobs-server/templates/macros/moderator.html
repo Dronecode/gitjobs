@@ -97,6 +97,7 @@
                     <div>
                       <button hx-put="/dashboard/moderator/jobs/{{ job.job_id }}/republish"
                               data-republish-job-button="true"
+                              hx-trigger="confirmed"
                               hx-disabled-elt="this"
                               class="btn-tertiary p-2"
                               title="Republish">
@@ -176,6 +177,7 @@
         <div>
           <button hx-put="/dashboard/moderator/jobs/{{ job.job_id }}/republish"
                   data-republish-job-button="true"
+                  hx-trigger="confirmed"
                   hx-disabled-elt="this"
                   class="btn-primary-outline btn-mini flex items-center justify-center space-x-2 group w-[95px]">
             <div class="svg-icon size-3 icon-send group-hover:bg-white"></div>
