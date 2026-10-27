@@ -29,6 +29,8 @@ begin
     if p_filters ? 'date_range' then
         v_date_to := current_date;
         case
+            when (p_filters->>'date_range') = 'any-time' then
+                v_date_from := null;
             when (p_filters->>'date_range') = 'last-day' then
                 v_date_from := current_date - interval '1 day';
             when (p_filters->>'date_range') = 'last3-days' then

@@ -101,7 +101,7 @@ export const resetForm = async (formId) => {
     // Reset select elements
     document.querySelectorAll(`select[form=${formId}]`).forEach((selectElement) => {
       if (selectElement.name === "date_range") {
-        selectElement.value = "last30-days";
+        selectElement.value = "any-time";
       } else {
         selectElement.value = "";
       }

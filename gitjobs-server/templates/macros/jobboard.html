@@ -327,6 +327,7 @@
                   name="date_range"
                   data-trigger-form="true"
                   class="select-primary py-0.5 text-[0.775rem]/6 text-stone-700">
+            {{ ui::select_option(value = "any-time", label = "Any time", selected = selected_date_range) -}}
             {{ ui::select_option(value = "last-day", label = "Last day", selected = selected_date_range) -}}
             {{ ui::select_option(value = "last3-days", label = "Last 3 days", selected = selected_date_range) -}}
             {{ ui::select_option(value = "last7-days", label = "Last week", selected = selected_date_range) -}}

@@ -168,14 +168,16 @@ impl Pagination for Filters {
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum DateRange {
+    /// Any time (default).
+    #[default]
+    AnyTime,
     /// Last day.
     LastDay,
     /// Last 3 days.
     Last3Days,
     /// Last 7 days.
     Last7Days,
-    /// Last 30 days (default).
-    #[default]
+    /// Last 30 days.
     Last30Days,
 }
 
