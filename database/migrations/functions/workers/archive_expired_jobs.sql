@@ -5,6 +5,7 @@ returns void as $$
     set
         status = 'archived',
         archived_at = current_timestamp,
+        expired = true,
         updated_at = current_timestamp
     where status = 'published'
     and published_at + '90 days'::interval < current_timestamp;

@@ -39,6 +39,7 @@
 {{ template "dashboard/list_user_invitations.sql" }}
 {{ template "dashboard/publish_job.sql" }}
 {{ template "dashboard/reject_job.sql" }}
+{{ template "dashboard/republish_job.sql" }}
 {{ template "dashboard/search_applications.sql" }}
 {{ template "dashboard/update_employer.sql" }}
 {{ template "dashboard/update_job.sql" }}

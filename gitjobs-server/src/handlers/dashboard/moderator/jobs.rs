@@ -31,6 +31,15 @@ use crate::{
 
 // Pages handlers.
 
+/// Returns the page listing all expired jobs for moderation.
+#[instrument(skip_all, err)]
+pub(crate) async fn expired_page(State(db): State<DynDB>) -> Result<impl IntoResponse, HandlerError> {
+    let jobs = db.list_jobs_for_moderation(JobStatus::Archived).await?;
+    let template = jobs::ExpiredPage { jobs };
+
+    Ok(Html(template.render()?))
+}
+
 /// Returns the page listing all live (published) jobs for moderation.
 #[instrument(skip_all, err)]
 pub(crate) async fn live_page(State(db): State<DynDB>) -> Result<impl IntoResponse, HandlerError> {
@@ -96,6 +105,28 @@ pub(crate) async fn approve(
             warn!("error posting slack notification: {}", err);
         }
     }
+
+    Ok((
+        StatusCode::NO_CONTENT,
+        [("HX-Trigger", "refresh-moderator-table")],
+    )
+        .into_response())
+}
+
+/// Republishes an expired job as a moderator and triggers a table refresh in the UI.
+#[instrument(skip_all, err)]
+pub(crate) async fn republish(
+    auth_session: AuthSession,
+    State(db): State<DynDB>,
+    Path(job_id): Path<Uuid>,
+) -> Result<impl IntoResponse, HandlerError> {
+    // Get user from session
+    let Some(user) = auth_session.user else {
+        return Ok(StatusCode::FORBIDDEN.into_response());
+    };
+
+    // Republish job
+    db.republish_job(&job_id, &user.user_id).await?;
 
     Ok((
         StatusCode::NO_CONTENT,
@@ -170,6 +201,29 @@ mod tests {
     };
 
     use super::*;
+
+    #[tokio::test]
+    async fn test_expired_page_renders_successfully() {
+        // Setup identifiers and data structures
+        let employer_id = Uuid::new_v4();
+        let job_id = Uuid::new_v4();
+        let mut job = sample_moderator_job_summary(job_id, employer_id);
+        job.archived_at = Some(chrono::Utc::now());
+
+        // Setup database mock
+        let mut db = MockDB::new();
+        db.expect_list_jobs_for_moderation()
+            .times(1)
+            .withf(|status| *status == JobStatus::Archived)
+            .returning(move |_| Ok(vec![job.clone()]));
+        let db: DynDB = Arc::new(db);
+
+        // Execute handler
+        let response = expired_page(State(db)).await.unwrap().into_response();
+
+        // Check response matches expectations
+        assert_eq!(response.status(), StatusCode::OK);
+    }
 
     #[tokio::test]
     async fn test_live_page_renders_successfully() {
@@ -274,6 +328,48 @@ mod tests {
         let request = Request::builder()
             .method("PUT")
             .uri(format!("/dashboard/moderator/jobs/{job_id}/approve"))
+            .header(COOKIE, format!("id={session_id}"))
+            .body(Body::empty())
+            .unwrap();
+        let response = router.oneshot(request).await.unwrap();
+
+        // Check response matches expectations
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
+    async fn test_republish_returns_no_content_for_moderator() {
+        // Setup identifiers and data structures
+        let auth_hash = "hash";
+        let job_id = Uuid::new_v4();
+        let session_id = session::Id::default();
+        let user_id = Uuid::new_v4();
+        let session_record = sample_session_record(session_id, user_id, auth_hash, None);
+        let mut moderator = sample_auth_user(user_id, auth_hash);
+        moderator.moderator = true;
+
+        // Setup database mock
+        let mut db = MockDB::new();
+        db.expect_get_session()
+            .times(1)
+            .withf(move |id| *id == session_id)
+            .returning(move |_| Ok(Some(session_record.clone())));
+        db.expect_get_user_by_id()
+            .times(1)
+            .withf(move |id| *id == user_id)
+            .returning(move |_| Ok(Some(moderator.clone())));
+        db.expect_republish_job()
+            .times(1)
+            .withf(move |id, reviewer| *id == job_id && *reviewer == user_id)
+            .returning(|_, _| Ok(()));
+
+        // Setup router and send request
+        let router = TestRouterBuilder::new(db, MockNotificationsManager::new())
+            .build()
+            .await;
+        let request = Request::builder()
+            .method("PUT")
+            .uri(format!("/dashboard/moderator/jobs/{job_id}/republish"))
             .header(COOKIE, format!("id={session_id}"))
             .body(Body::empty())
             .unwrap();

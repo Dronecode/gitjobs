@@ -13,14 +13,14 @@
   {{ ui::form_title(title = title) -}}
 </div>
 
-{{ moderator::jobs_table(jobs = jobs, empty_title = empty_title, is_pending = is_pending) -}}
+{{ moderator::jobs_table(jobs = jobs, empty_title = empty_title, is_pending = is_pending, is_expired = is_expired) -}}
 
 <div class="flex flex-col space-y-4 md:hidden mt-6">
   {% if jobs.is_empty() -%}
     {{ ui::empty_state_alert(title = empty_title) -}}
   {% else -%}
     {% for job in jobs -%}
-      {{ moderator::mobile_job_card(job = job, is_pending = is_pending) -}}
+      {{ moderator::mobile_job_card(job = job, is_pending = is_pending, is_expired = is_expired) -}}
     {% endfor -%}
   {% endif -%}
 </div>

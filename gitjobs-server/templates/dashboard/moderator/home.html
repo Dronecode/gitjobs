@@ -3,7 +3,7 @@
 
 {% block dashboard_main -%}
   <div id="dashboard-content"
-       hx-get="{%- if content.is_pending_jobs() -%}/dashboard/moderator/jobs/pending{%- else -%}/dashboard/moderator/jobs/live{%- endif -%}"
+       hx-get="{%- if content.is_pending_jobs() -%}/dashboard/moderator/jobs/pending{%- else if content.is_expired_jobs() -%}/dashboard/moderator/jobs/expired{%- else -%}/dashboard/moderator/jobs/live{%- endif -%}"
        hx-trigger="refresh-moderator-table"
        class="p-4 sm:p-6 lg:p-12">
     {# Content -#}

@@ -31,7 +31,10 @@ pub(crate) struct Page {
 
 /// Content section for the moderator dashboard home page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum Content {
+    /// Expired jobs page content.
+    ExpiredJobs(jobs::ExpiredPage),
     /// Live jobs page content.
     LiveJobs(jobs::LivePage),
     /// Pending jobs page content.
@@ -39,6 +42,11 @@ pub(crate) enum Content {
 }
 
 impl Content {
+    /// Check if the content is the expired jobs page.
+    fn is_expired_jobs(&self) -> bool {
+        matches!(self, Content::ExpiredJobs(_))
+    }
+
     /// Check if the content is the live jobs page.
     fn is_live_jobs(&self) -> bool {
         matches!(self, Content::LiveJobs(_))
@@ -53,6 +61,7 @@ impl Content {
 impl std::fmt::Display for Content {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Content::ExpiredJobs(template) => write!(f, "{}", template.render()?),
             Content::LiveJobs(template) => write!(f, "{}", template.render()?),
             Content::PendingJobs(template) => write!(f, "{}", template.render()?),
         }
@@ -62,7 +71,10 @@ impl std::fmt::Display for Content {
 /// Tab selection for the moderator dashboard home page.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString)]
 #[strum(serialize_all = "kebab-case")]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum Tab {
+    /// Expired jobs tab.
+    ExpiredJobs,
     /// Live jobs tab.
     LiveJobs,
     /// Pending jobs tab (default).

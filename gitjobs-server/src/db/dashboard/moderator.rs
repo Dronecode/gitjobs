@@ -22,6 +22,9 @@ pub(crate) trait DBDashBoardModerator {
 
     /// Rejects a job, optionally adding review notes and updating review metadata.
     async fn reject_job(&self, job_id: &Uuid, reviewer: &Uuid, review_notes: Option<String>) -> Result<()>;
+
+    /// Republishes an expired job, starting a new expiry window.
+    async fn republish_job(&self, job_id: &Uuid, reviewer: &Uuid) -> Result<()>;
 }
 
 #[async_trait]
@@ -65,6 +68,17 @@ impl DBDashBoardModerator for PgDB {
             &[job_id, reviewer, &review_notes],
         )
         .await?;
+
+        Ok(())
+    }
+
+    #[instrument(skip(self), err)]
+    async fn republish_job(&self, job_id: &Uuid, reviewer: &Uuid) -> Result<()> {
+        trace!("db: republish job");
+
+        let db = self.pool.get().await?;
+        db.execute("select republish_job($1::uuid, $2::uuid);", &[job_id, reviewer])
+            .await?;
 
         Ok(())
     }

@@ -64,6 +64,7 @@ select ok(
         where job_id = :'publishedJobID'::uuid
         and status = 'archived'
         and archived_at is not null
+        and not expired
         and updated_at is not null
     ),
     'Should archive a published job and set archived_at'

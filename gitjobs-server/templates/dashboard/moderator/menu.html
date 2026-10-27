@@ -11,5 +11,6 @@
     {{ dashboard::menu_title(text = "Jobs", extra_styles = "py-1.5") }}
     {{ dashboard::menu_item(name = "Pending", icon = "tasks", is_active = content.is_pending_jobs() , href = "/dashboard/moderator?tab=pending-jobs") -}}
     {{ dashboard::menu_item(name = "Live", icon = "live", is_active = content.is_live_jobs() , href = "/dashboard/moderator?tab=live-jobs") -}}
+    {{ dashboard::menu_item(name = "Expired", icon = "archive", is_active = content.is_expired_jobs() , href = "/dashboard/moderator?tab=expired-jobs") -}}
   </div>
 </div>

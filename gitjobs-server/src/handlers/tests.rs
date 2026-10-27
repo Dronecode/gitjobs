@@ -421,6 +421,7 @@ pub(crate) fn sample_member() -> Member {
 /// Sample moderator job summary used by moderator handlers.
 pub(crate) fn sample_moderator_job_summary(job_id: Uuid, employer_id: Uuid) -> ModeratorJobSummary {
     ModeratorJobSummary {
+        archived_at: None,
         created_at: Utc.with_ymd_and_hms(2024, 1, 2, 12, 0, 0).unwrap(),
         employer: ModeratorEmployer {
             company: "Example Corp".to_string(),

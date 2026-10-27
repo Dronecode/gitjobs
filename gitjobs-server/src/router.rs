@@ -316,10 +316,15 @@ fn setup_moderator_dashboard_router(state: State) -> Router<State> {
     // Setup router
     Router::new()
         .route("/", get(dashboard::moderator::home::page))
+        .route("/jobs/expired", get(dashboard::moderator::jobs::expired_page))
         .route("/jobs/live", get(dashboard::moderator::jobs::live_page))
         .route("/jobs/pending", get(dashboard::moderator::jobs::pending_page))
         .route("/jobs/{job_id}/approve", put(dashboard::moderator::jobs::approve))
         .route("/jobs/{job_id}/reject", put(dashboard::moderator::jobs::reject))
+        .route(
+            "/jobs/{job_id}/republish",
+            put(dashboard::moderator::jobs::republish),
+        )
         .route(
             "/jobs/{employer_id}/{job_id}/preview",
             get(dashboard::moderator::jobs::preview_page),

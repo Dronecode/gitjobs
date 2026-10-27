@@ -3,7 +3,7 @@
 -- ============================================================================
 
 begin;
-select plan(157);
+select plan(158);
 
 -- ============================================================================
 -- TESTS
@@ -164,7 +164,8 @@ select columns_are('job', array[
     'reviewed_by',
     'reviewed_at',
     'first_published_at',
-    'deleted_at'
+    'deleted_at',
+    'expired'
 ]);
 
 -- Test: job_certification columns should match expected
@@ -364,6 +365,7 @@ select has_function('upsert_job_seeker_profile');
 select has_function('approve_job');
 select has_function('list_jobs_for_moderation');
 select has_function('reject_job');
+select has_function('republish_job');
 select has_function('i_array_to_string');
 select has_function('get_image_version');
 select has_function('apply_to_job');

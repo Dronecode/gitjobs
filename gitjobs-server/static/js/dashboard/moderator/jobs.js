@@ -12,7 +12,7 @@ const CLOSE_REJECT_MODAL_BUTTON_ID = "close-reject-modal";
 const BACKDROP_REJECT_MODAL_ID = "backdrop-reject-modal";
 
 /**
- * Initializes moderation actions for approve and reject job workflows.
+ * Initializes moderation actions for approve, reject and republish job workflows.
  */
 export const initializeModeratorJobs = () => {
   bindHtmxAfterRequestOnce({
@@ -24,6 +24,17 @@ export const initializeModeratorJobs = () => {
       });
     },
     boundAttribute: "approveBound",
+  });
+
+  bindHtmxAfterRequestOnce({
+    selector: "[data-republish-job-button]",
+    handler: (event) => {
+      handleHtmxResponse({
+        xhr: event.detail.xhr,
+        errorMessage: "Something went wrong republishing this job. Please try again later.",
+      });
+    },
+    boundAttribute: "republishBound",
   });
 
   const rejectButtons = document.querySelectorAll(".reject-modal");

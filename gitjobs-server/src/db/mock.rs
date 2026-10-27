@@ -214,6 +214,7 @@ mock! {
             reviewer: &Uuid,
             review_notes: Option<String>,
         ) -> Result<()>;
+        async fn republish_job(&self, job_id: &Uuid, reviewer: &Uuid) -> Result<()>;
     }
 
     #[async_trait]

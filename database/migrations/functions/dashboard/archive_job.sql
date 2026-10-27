@@ -5,6 +5,7 @@ returns void as $$
     set
         status = 'archived',
         archived_at = current_timestamp,
+        expired = false,
         updated_at = current_timestamp
     where job_id = p_job_id
     and (status = 'pending-approval' or status = 'published');

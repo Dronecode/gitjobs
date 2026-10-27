@@ -73,6 +73,7 @@ select ok(
     (
         select status = 'archived'
         and archived_at is not null
+        and expired
         and updated_at is not null
         from job
         where job_id = :'expiredJobID'::uuid

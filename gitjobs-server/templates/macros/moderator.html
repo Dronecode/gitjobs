@@ -1,6 +1,6 @@
 {% import "macros/ui.html" as ui -%}
 
-{% macro jobs_table(jobs, empty_title, is_pending = false) -%}
+{% macro jobs_table(jobs, empty_title, is_pending = false, is_expired = false) -%}
   <div class="hidden md:block relative overflow-visible mt-10">
     <table class="table-fixed w-full text-xs lg:text-sm text-left rtl:text-right text-stone-500">
       <thead class="text-xs text-stone-700 uppercase bg-stone-100 border-b border-stone-200">
@@ -11,7 +11,13 @@
           </th>
           <th scope="col"
               class="px-3 xl:px-5 py-3 w-[212px] table-cell lg:hidden xl:table-cell">Member</th>
-          <th scope="col" class="px-3 xl:px-5 py-3 w-26 xl:w-32">Created</th>
+          <th scope="col" class="px-3 xl:px-5 py-3 w-26 xl:w-32">
+            {% if is_expired -%}
+              Expired
+            {% else -%}
+              Created
+            {% endif -%}
+          </th>
           <th scope="col" class="p-4 w-22 xl:w-25 text-center">Actions</th>
         </tr>
       </thead>
@@ -62,9 +68,15 @@
               </td>
               {# End member -#}
 
-              {# Created date -#}
-              <td class="px-3 xl:px-5 py-4 whitespace-nowrap">{{ job.created_at.format(DATE_FORMAT) }}</td>
-              {# End created date -#}
+              {# Created or expired date -#}
+              <td class="px-3 xl:px-5 py-4 whitespace-nowrap">
+                {% if let Some(archived_at) = job.archived_at -%}
+                  {{ archived_at.format(DATE_FORMAT) }}
+                {% else -%}
+                  {{ job.created_at.format(DATE_FORMAT) }}
+                {% endif -%}
+              </td>
+              {# End created or expired date -#}
 
               {# Actions -#}
               <td class="px-3 xl:px-5">
@@ -81,13 +93,25 @@
                     </div>
                   {% endif -%}
 
-                  <div>
-                    <button data-job-id="{{ job.job_id }}"
-                            class="btn-tertiary p-2 reject-modal"
-                            title="Reject">
-                      <div class="svg-icon size-2.5 md:size-3.5 icon-cancel"></div>
-                    </button>
-                  </div>
+                  {% if is_expired -%}
+                    <div>
+                      <button hx-put="/dashboard/moderator/jobs/{{ job.job_id }}/republish"
+                              data-republish-job-button="true"
+                              hx-disabled-elt="this"
+                              class="btn-tertiary p-2"
+                              title="Republish">
+                        <div class="svg-icon size-3 md:size-4 icon-send"></div>
+                      </button>
+                    </div>
+                  {% else -%}
+                    <div>
+                      <button data-job-id="{{ job.job_id }}"
+                              class="btn-tertiary p-2 reject-modal"
+                              title="Reject">
+                        <div class="svg-icon size-2.5 md:size-3.5 icon-cancel"></div>
+                      </button>
+                    </div>
+                  {% endif -%}
                 </div>
               </td>
               {# End actions -#}
@@ -99,7 +123,7 @@
   </div>
 {% endmacro jobs_table -%}
 
-{% macro mobile_job_card(job, is_pending = false) -%}
+{% macro mobile_job_card(job, is_pending = false, is_expired = false) -%}
   <div class="border border-stone-200 bg-white rounded-lg p-5">
     <div class="flex justify-between items-center">
       {# Company -#}
@@ -108,11 +132,15 @@
       </div>
       {# End company -#}
 
-      {# Created -#}
+      {# Created or expired -#}
       <div class="truncate leading-[0.7rem] w-[50px] text-[0.7rem] font-semibold tracking-wide uppercase text-end">
-        {{ job.created_at.format(DATE_FORMAT_3) }}
+        {% if let Some(archived_at) = job.archived_at -%}
+          {{ archived_at.format(DATE_FORMAT_3) }}
+        {% else -%}
+          {{ job.created_at.format(DATE_FORMAT_3) }}
+        {% endif -%}
       </div>
-      {# End created -#}
+      {# End created or expired -#}
     </div>
 
     {# Job -#}
@@ -144,14 +172,26 @@
         </div>
       {% endif -%}
 
-      <div>
-        <button data-job-id="{{ job.job_id }}"
-                class="btn-primary-outline btn-mini flex items-center justify-center space-x-2 reject-modal group w-[95px]"
-                title="Reject">
-          <div class="svg-icon size-2.5 icon-cancel group-hover:bg-white"></div>
-          <div>Reject</div>
-        </button>
-      </div>
+      {% if is_expired -%}
+        <div>
+          <button hx-put="/dashboard/moderator/jobs/{{ job.job_id }}/republish"
+                  data-republish-job-button="true"
+                  hx-disabled-elt="this"
+                  class="btn-primary-outline btn-mini flex items-center justify-center space-x-2 group w-[95px]">
+            <div class="svg-icon size-3 icon-send group-hover:bg-white"></div>
+            <div>Republish</div>
+          </button>
+        </div>
+      {% else -%}
+        <div>
+          <button data-job-id="{{ job.job_id }}"
+                  class="btn-primary-outline btn-mini flex items-center justify-center space-x-2 reject-modal group w-[95px]"
+                  title="Reject">
+            <div class="svg-icon size-2.5 icon-cancel group-hover:bg-white"></div>
+            <div>Reject</div>
+          </button>
+        </div>
+      {% endif -%}
     </div>
     {# End actions -#}
   </div>

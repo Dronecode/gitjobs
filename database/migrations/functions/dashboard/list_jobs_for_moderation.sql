@@ -1,7 +1,9 @@
--- Returns jobs for moderation filtered by status.
+-- Returns jobs for moderation filtered by status. For archived jobs, only the
+-- ones archived because they expired are returned.
 create or replace function list_jobs_for_moderation(p_status text)
 returns json as $$
-    select coalesce(json_agg(json_build_object(
+    select coalesce(json_agg(json_strip_nulls(json_build_object(
+        'archived_at', j.archived_at,
         'created_at', j.created_at,
         'employer', jsonb_strip_nulls(jsonb_build_object(
             'company', e.company,
@@ -12,7 +14,7 @@ returns json as $$
         )),
         'job_id', j.job_id,
         'title', j.title
-    ) order by j.created_at desc), '[]'::json)
+    )) order by j.created_at desc), '[]'::json)
     from job j
     join employer e on j.employer_id = e.employer_id
     left join lateral (
@@ -27,5 +29,6 @@ returns json as $$
         join member m on em.member_id = m.member_id
         where em.employer_id = e.employer_id
     ) members on true
-    where j.status = p_status;
+    where j.status = p_status
+    and (p_status <> 'archived' or j.expired);
 $$ language sql;

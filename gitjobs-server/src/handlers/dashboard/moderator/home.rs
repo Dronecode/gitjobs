@@ -54,6 +54,10 @@ pub(crate) async fn page(
     // Prepare content for the selected tab
     let tab: Tab = query.get("tab").unwrap_or(&String::new()).parse().unwrap_or_default();
     let content = match tab {
+        Tab::ExpiredJobs => {
+            let jobs = db.list_jobs_for_moderation(JobStatus::Archived).await?;
+            Content::ExpiredJobs(jobs::ExpiredPage { jobs })
+        }
         Tab::LiveJobs => {
             let jobs = db.list_jobs_for_moderation(JobStatus::Published).await?;
             Content::LiveJobs(jobs::LivePage { jobs })
@@ -132,6 +136,49 @@ mod tests {
         let request = Request::builder()
             .method("GET")
             .uri("/dashboard/moderator?tab=live-jobs")
+            .header(COOKIE, format!("id={session_id}"))
+            .body(Body::empty())
+            .unwrap();
+        let response = router.oneshot(request).await.unwrap();
+
+        // Check response matches expectations
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_page_renders_expired_jobs_tab_for_moderator() {
+        // Setup identifiers and data structures
+        let auth_hash = "hash";
+        let employer_id = Uuid::new_v4();
+        let job_id = Uuid::new_v4();
+        let session_id = session::Id::default();
+        let user_id = Uuid::new_v4();
+        let session_record = sample_session_record(session_id, user_id, auth_hash, None);
+        let mut moderator = sample_auth_user(user_id, auth_hash);
+        moderator.moderator = true;
+
+        // Setup database mock
+        let mut db = MockDB::new();
+        db.expect_get_session()
+            .times(1)
+            .withf(move |id| *id == session_id)
+            .returning(move |_| Ok(Some(session_record.clone())));
+        db.expect_get_user_by_id()
+            .times(1)
+            .withf(move |id| *id == user_id)
+            .returning(move |_| Ok(Some(moderator.clone())));
+        db.expect_list_jobs_for_moderation()
+            .times(1)
+            .withf(|status| *status == JobStatus::Archived)
+            .returning(move |_| Ok(vec![sample_moderator_job_summary(job_id, employer_id)]));
+
+        // Setup router and send request
+        let router = TestRouterBuilder::new(db, MockNotificationsManager::new())
+            .build()
+            .await;
+        let request = Request::builder()
+            .method("GET")
+            .uri("/dashboard/moderator?tab=expired-jobs")
             .header(COOKIE, format!("id={session_id}"))
             .body(Body::empty())
             .unwrap();

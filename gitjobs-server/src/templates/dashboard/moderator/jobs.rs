@@ -13,6 +13,14 @@ use crate::templates::{
 
 // Pages templates.
 
+/// Template for the expired jobs page in the moderator dashboard.
+#[derive(Debug, Clone, Template, Serialize, Deserialize)]
+#[template(path = "dashboard/moderator/expired_jobs.html")]
+pub(crate) struct ExpiredPage {
+    /// List of expired jobs.
+    pub jobs: Vec<JobSummary>,
+}
+
 /// Template for the live jobs page in the moderator dashboard.
 #[derive(Debug, Clone, Template, Serialize, Deserialize)]
 #[template(path = "dashboard/moderator/live_jobs.html")]
@@ -35,6 +43,8 @@ pub(crate) struct PendingPage {
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct JobSummary {
+    /// Timestamp when the job was archived (only set for expired jobs).
+    pub archived_at: Option<DateTime<Utc>>,
     /// Timestamp when the job was created.
     pub created_at: DateTime<Utc>,
     /// Employer information for the job.
